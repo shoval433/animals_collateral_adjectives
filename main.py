@@ -94,9 +94,26 @@ def main(response):
             collateral_adjective = "others"
             Animals=addToDictionary(Animals,collateral_adjective,animal)
         else:
-            
+            # handle many in one <tr><br>
+            ####################################################################
+            # <td>anguine<br>elapine<br>ophidian<br>serpentine<br>viperine</td>
+            manyIn=cells[5].find_all("br")
+            flag_isOne=True
+            if len(manyIn)>1:##Here we know that there are some names separated by <br>
+                collateral_adjectives = []
+                print('yes')
+                for tag in cells[5].contents:
+                    if tag.name == "br":
+                        try:
+                            collateral_adjectives.append(tag.nextSibling.strip())
+                        except:
+                            continue
+                flag_isOne=False
+                collateral_adjective= ' '.join(collateral_adjectives)
+            #####################################################################
             animal = cells[0].text.strip()
-            collateral_adjective = cells[5].text.strip()
+            if flag_isOne:
+                collateral_adjective = cells[5].text.strip()
             if len(collateral_adjective) >2:
                 collateral_adjective=checkAdjective(collateral_adjective)
                 if isinstance(collateral_adjective, list):
