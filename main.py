@@ -2,9 +2,7 @@
 import requests
 from bs4 import BeautifulSoup
 import re
-url = "https://en.wikipedia.org/wiki/List_of_animal_names"
-response = requests.get(url)
-
+from flask import Flask, render_template
 
 # Check that each collateral_adjective contains only one name
 def checkAdjective(name):
@@ -75,8 +73,10 @@ def addToDictionary(Animals,collateral_adjective,animal):
     else:
         Animals[collateral_adjective].append(animal)
     return Animals
-def main(response):
+def wikiAnimal():
     # start souping
+    url = "https://en.wikipedia.org/wiki/List_of_animal_names"
+    response = requests.get(url)
     soup = BeautifulSoup(response.content, "html.parser")
     Animals={}
     #go to big table
@@ -142,8 +142,9 @@ def main(response):
                     Animals= addToDictionary(Animals,collateral_adjective,animal)
                    
     Animals=remove_duplicates(Animals)
-    for key, values in Animals.items():
-        print(key + ": " + ", ".join(values))
+    # for key, values in Animals.items():
+    #     print(key + ": " + ", ".join(values))
+    return Animals
 
 def remove_duplicates(dict_obj):
     result_dict = {}
@@ -155,8 +156,16 @@ def remove_duplicates(dict_obj):
                 result_dict.setdefault(key, []).append(val)
     return result_dict
 
-response = requests.get(url)
-if response.ok:
-    main(response)
-else:
-    print("There was an error with the url : " +url)
+app = Flask(__name__)
+
+@app.route('/')
+def display_animals():
+    animals = wikiAnimal()
+    headers = ["Collateral_Adjective", "Animal"]
+    rows = []
+    for animal, classification in animals.items():
+        rows.append([animal, ", ".join(classification)])
+    return render_template('animals.html', headers=headers, rows=rows)
+
+if __name__ == '__main__':
+    app.run(debug=True)
