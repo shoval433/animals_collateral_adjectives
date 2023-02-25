@@ -13,9 +13,8 @@ Using the page https://en.wikipedia.org/wiki/List_of_animal_names, write a pytho
 
  - [External material that helped me](https://www.geeksforgeeks.org/beautifulsoup-nextsibling/)
 
-## Deployment
-
-To deploy this project run
+## Run Locally
+To Run Locally this project run
 
 ```bash
   pip install -r requirements.txt
