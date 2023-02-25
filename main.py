@@ -58,10 +58,19 @@ def remove_non_letters(string):
             return letters_only.strip()
     return letters_only.strip()
 
+def Capital_letters_in_name(name):
+    # Delete all the animals that have a capital letter in the middle of a word
+    for i in range(1, len(name)):
+        if name[i].isupper():
+            name = name[:i]
+            break
+    return name 
+
 def checkName(name):
     # Removes everything that is not letters
     name=remove_non_letters(name)
     name=name.replace("family", "").strip()
+    name=Capital_letters_in_name(name)
     #converts the name to a list with has several names
     if "," in name:
        name= [n.strip() for n in name.split(",")]
@@ -69,13 +78,13 @@ def checkName(name):
 
 def addToDictionary(Animals,collateral_adjective,animal):
     if collateral_adjective not in Animals:
-        Animals[collateral_adjective]=list()
+        Animals[collateral_adjective.capitalize()]=list()
     animal=checkName(animal)
     if isinstance(animal, list):
         for a in animal:
-            Animals[collateral_adjective].append(a)
+            Animals[collateral_adjective.capitalize()].append(a)
     else:
-        Animals[collateral_adjective].append(animal)
+        Animals[collateral_adjective.capitalize()].append(animal)
     return Animals
 
 def wikiAnimal():
@@ -104,7 +113,7 @@ def wikiAnimal():
             # <td>anguine<br>elapine<br>ophidian<br>serpentine<br>viperine</td>
             manyIn=cells[COLLATERAL_ADJECTIVE_CELLS].find_all("br")
             flag_isOne=True
-            if len(manyIn) > 1:## Here we know that there are some names separated by <br>
+            if len(manyIn) > 0:## Here we know that there are some names separated by <br>
                 collateral_adjectives = []
                 for tag in cells[COLLATERAL_ADJECTIVE_CELLS].contents:
                     if tag.name == "br":
