@@ -28,3 +28,10 @@ To deploy this project run
 http://localhost:5000
 
 
+## References to scripting data collection:
+### animal:
+The treatment of the animal names in that each animal consists of 2 words, cleaning of all the spelling that are not letters, and arrangement of if there is a capital letter in the middle of a word.
+If the name contained family he was deleted.
+### collateral_adjectives:
+It was decided that if there is more than one, we will enter the animal for each one separately, put out parentheses and special characters.
+Animals that were without collateral_adjectives enter the other category.
