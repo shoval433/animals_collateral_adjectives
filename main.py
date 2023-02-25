@@ -3,7 +3,12 @@ import requests
 from bs4 import BeautifulSoup
 import re
 from flask import Flask, render_template
-
+# CONST
+MINIMAL_NUMBER_OF_CELLS_IN_RELEVANT_ROW = 6
+COLLATERAL_ADJECTIVE_CELLS = 5
+ANIMAL_CELLS_TABLE1 = 0
+ANIMAL_CELLS_TABLE2 = MINIMAL_NUMBER_OF_CELLS_IN_RELEVANT_ROW
+NUMBER_OF_WORDS = 2
 # Check that each collateral_adjective contains only one name
 def checkAdjective(name):
     name=remove_non_letters_forAdjective(name)
@@ -17,17 +22,17 @@ def checkAdjective(name):
     
 def remove_non_letters_forAdjective(string):
     letters_only = ""
-    trash=['[',']','(',')']
+    brackets=['[',']','(',')']
     flag_insert=True
-    trashIndex=0
+    bracketsIndex=0
     for char in string:
         if char.isalpha() and flag_insert:
             letters_only += char
         # takes everything inside the brackets and ignores it and puts spaces
-        elif char in trash and flag_insert:
+        elif char in brackets and flag_insert:
             flag_insert=False
-            trashIndex=trash.index(char)+1
-        elif char == trash[trashIndex] and flag_insert is False:
+            bracketsIndex=brackets.index(char)+1
+        elif char == brackets[bracketsIndex] and flag_insert is False:
             flag_insert=True
             letters_only += " "
         else:
@@ -63,7 +68,6 @@ def checkName(name):
     return name
 
 def addToDictionary(Animals,collateral_adjective,animal):
-    
     if collateral_adjective not in Animals:
         Animals[collateral_adjective]=list()
     animal=checkName(animal)
@@ -73,6 +77,7 @@ def addToDictionary(Animals,collateral_adjective,animal):
     else:
         Animals[collateral_adjective].append(animal)
     return Animals
+
 def wikiAnimal():
     # start souping
     url = "https://en.wikipedia.org/wiki/List_of_animal_names"
@@ -82,27 +87,26 @@ def wikiAnimal():
     #go to big table
     table = soup.find_all("table", {"class": "wikitable"})[1]
     l=[]
-    # run in n(o) (one for) Because we know exactly where the names are (if it is not possible to go over column 0)
+    # run in O(n) (one for) Because we know exactly where the names are (if it is not possible to go over column 0)
     for row in table.find_all("tr")[1:]:# starting from one 
         cells = row.find_all("td")
         #not to go out of range
-        if len(cells) < 6:
+        if len(cells) < MINIMAL_NUMBER_OF_CELLS_IN_RELEVANT_ROW:
             continue
         # handle animals without collateral -> others
-        elif "?" in cells[5].text.strip() :
-            animal = cells[0].text.strip()
+        elif "?" in cells[COLLATERAL_ADJECTIVE_CELLS].text.strip() :
+            animal = cells[ANIMAL_CELLS_TABLE1].text.strip()
             collateral_adjective = "others"
             Animals=addToDictionary(Animals,collateral_adjective,animal)
         else:
             # handle many in one <tr><br>
             ####################################################################
             # <td>anguine<br>elapine<br>ophidian<br>serpentine<br>viperine</td>
-            manyIn=cells[5].find_all("br")
+            manyIn=cells[COLLATERAL_ADJECTIVE_CELLS].find_all("br")
             flag_isOne=True
-            if len(manyIn)>1:##Here we know that there are some names separated by <br>
+            if len(manyIn) > 1:## Here we know that there are some names separated by <br>
                 collateral_adjectives = []
-                print('yes')
-                for tag in cells[5].contents:
+                for tag in cells[COLLATERAL_ADJECTIVE_CELLS].contents:
                     if tag.name == "br":
                         try:
                             collateral_adjectives.append(tag.nextSibling.strip())
@@ -111,18 +115,18 @@ def wikiAnimal():
                 flag_isOne=False
                 collateral_adjective= ' '.join(collateral_adjectives)
             #####################################################################
-            animal = cells[0].text.strip()
+            animal = cells[ANIMAL_CELLS_TABLE1].text.strip()
             if flag_isOne:
-                collateral_adjective = cells[5].text.strip()
-            if len(collateral_adjective) >2:
+                collateral_adjective = cells[COLLATERAL_ADJECTIVE_CELLS].text.strip()
+            if len(collateral_adjective) > NUMBER_OF_WORDS:
                 collateral_adjective=checkAdjective(collateral_adjective)
                 if isinstance(collateral_adjective, list):
                     for one_collateral_adjective in collateral_adjective:
                         Animals= addToDictionary(Animals,one_collateral_adjective,animal)
-                    # print(collateral_adjective+"->"+ str(Animals[collateral_adjective]))   
+                      
                 else:
                     Animals= addToDictionary(Animals,collateral_adjective,animal)
-                    # print(collateral_adjective+"->"+ str(Animals[collateral_adjective]))
+                    
 
 
     #go to first table
@@ -130,9 +134,11 @@ def wikiAnimal():
 
     for row in table.find_all("tr")[1:]:
         cells = row.find_all("td")
-        collateral_adjective = cells[5].text.strip()
-        animal = cells[6].text.strip()
-        if len(collateral_adjective) >2:
+        if len(cells) < MINIMAL_NUMBER_OF_CELLS_IN_RELEVANT_ROW:
+            continue
+        collateral_adjective = cells[COLLATERAL_ADJECTIVE_CELLS].text.strip()
+        animal = cells[ANIMAL_CELLS_TABLE2].text.strip()
+        if len(collateral_adjective) > NUMBER_OF_WORDS:
                 collateral_adjective=checkAdjective(collateral_adjective)
                 if isinstance(collateral_adjective, list):
                     for one_collateral_adjective in collateral_adjective:
@@ -142,8 +148,6 @@ def wikiAnimal():
                     Animals= addToDictionary(Animals,collateral_adjective,animal)
                    
     Animals=remove_duplicates(Animals)
-    # for key, values in Animals.items():
-    #     print(key + ": " + ", ".join(values))
     return Animals
 
 def remove_duplicates(dict_obj):
